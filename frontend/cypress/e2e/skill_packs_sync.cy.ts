@@ -2,18 +2,8 @@
 
 import { setupCommonPageTestHooks } from "../support/testHooks";
 
-// Clerk/Next.js occasionally triggers a hydration mismatch on auth routes in CI.
-// This is non-deterministic UI noise for these tests; ignore it so assertions can proceed.
-Cypress.on("uncaught:exception", (err) => {
-  if (err.message?.includes("Hydration failed")) {
-    return false;
-  }
-  return true;
-});
-
 describe("Skill packs", () => {
   const apiBase = "**/api/v1";
-  const email = Cypress.env("CLERK_TEST_EMAIL") || "jane+clerk_test@example.com";
 
   setupCommonPageTestHooks(apiBase);
 
@@ -41,14 +31,13 @@ describe("Skill packs", () => {
       },
     }).as("packSync");
 
-    cy.visit("/sign-in");
-    cy.clerkLoaded();
-    cy.clerkSignIn({ strategy: "email_code", identifier: email });
-
+    cy.loginWithLocalAuth();
     cy.visit("/skills/packs");
     cy.waitForAppLoaded();
 
-    cy.wait("@packsList", { timeout: 20_000 });
+    cy.wait(["@usersMe", "@organizationsList", "@orgMeMember", "@packsList"], {
+      timeout: 20_000,
+    });
     cy.contains(/openclaw skills/i).should("be.visible");
 
     cy.contains("button", /^sync$/i).click();

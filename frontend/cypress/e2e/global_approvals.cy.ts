@@ -2,18 +2,8 @@
 
 import { setupCommonPageTestHooks } from "../support/testHooks";
 
-// Clerk/Next.js occasionally triggers a hydration mismatch on auth routes in CI.
-// This is non-deterministic UI noise for these tests; ignore it so assertions can proceed.
-Cypress.on("uncaught:exception", (err) => {
-  if (err.message?.includes("Hydration failed")) {
-    return false;
-  }
-  return true;
-});
-
 describe("Global approvals", () => {
   const apiBase = "**/api/v1";
-  const email = Cypress.env("CLERK_TEST_EMAIL") || "jane+clerk_test@example.com";
 
   setupCommonPageTestHooks(apiBase);
 
@@ -62,14 +52,20 @@ describe("Global approvals", () => {
       body: { ...approval, status: "approved" },
     }).as("approvalUpdate");
 
-    cy.visit("/sign-in");
-    cy.clerkLoaded();
-    cy.clerkSignIn({ strategy: "email_code", identifier: email });
-
+    cy.loginWithLocalAuth();
     cy.visit("/approvals");
     cy.waitForAppLoaded();
 
-    cy.wait(["@boardsList", "@approvalsList"], { timeout: 20_000 });
+    cy.wait(
+      [
+        "@usersMe",
+        "@organizationsList",
+        "@orgMeMember",
+        "@boardsList",
+        "@approvalsList",
+      ],
+      { timeout: 20_000 },
+    );
 
     // Pending approval should be visible in the list.
     cy.contains(/unapproved tasks/i).should("be.visible");
