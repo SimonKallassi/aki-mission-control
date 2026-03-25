@@ -15,11 +15,14 @@ import {
 import { BrandMark } from "@/components/atoms/BrandMark";
 import { OrgSwitcher } from "@/components/organisms/OrgSwitcher";
 import { UserMenu } from "@/components/organisms/UserMenu";
+import { PixelOfficePanel } from "@/components/organisms/PixelOfficePanel";
+import { useInProgressTasks } from "@/hooks/useInProgressTasks";
 import { isOnboardingComplete } from "@/lib/onboarding";
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const inProgressTasks = useInProgressTasks();
   const { isSignedIn } = useAuth();
   const isOnboardingPath = pathname === "/onboarding";
   const [sidebarState, setSidebarState] = useState({ open: false, path: pathname });
@@ -139,6 +142,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           data-cy="sidebar-backdrop"
         />
       ) : null}
+
+      <PixelOfficePanel inProgressTasks={inProgressTasks} />
 
       <div className="grid min-h-[calc(100vh-64px)] grid-cols-1 md:grid-cols-[260px_1fr] bg-slate-50">
         {children}
